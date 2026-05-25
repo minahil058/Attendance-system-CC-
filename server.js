@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const mysql = require('mysql2/promise');
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
-const { fromInstanceMetadata } = require("@aws-sdk/credential-providers");
 require('dotenv').config();
 
 const app = express();
@@ -23,7 +22,8 @@ const pool = mysql.createPool({
 
 const snsClient = new SNSClient({ 
   region: "us-east-1",
-  credentials: fromInstanceMetadata() // Ye command EC2 ke IAM role ko force karti hai
+  // Hum explicitly koi credentials pass nahi kar rahe 
+  // taake SDK automatically Instance Profile/IAM Role use kare.
 });
 
 
