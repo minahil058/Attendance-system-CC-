@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Attendance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-1: #e0f0ff;
+      --bg-2: #93c5fd;
+      --bg-3: #3b82f6;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-400: #94a3b8;
+      --slate-100: #f1f5f9;
+      --white: #ffffff;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #3b82f6;
+      --primary-glow: rgba(37, 99, 235, 0.35);
+      --input-bg: #ffffff;
+      --error: #ef4444;
+      --success: #10b981;
+      --font: 'Inter', 'Segoe UI', sans-serif;
+      --radius-xl: 24px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.8), 0 25px 50px -12px rgba(15, 23, 42, 0.18), 0 12px 24px -8px rgba(37, 99, 235, 0.12);
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: var(--font);
+      background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 45%, var(--bg-3) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      color: var(--slate-900);
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .page-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle 420px at 15% 20%, rgba(255, 255, 255, 0.35) 0%, transparent 70%),
+        radial-gradient(circle 380px at 85% 75%, rgba(59, 130, 246, 0.25) 0%, transparent 70%);
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      background: rgba(248, 250, 252, 0.92);
+      backdrop-filter: blur(20px) saturate(1.15);
+      -webkit-backdrop-filter: blur(20px) saturate(1.15);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 18px;
+      box-shadow: var(--shadow-card);
+      padding: 1.35rem 1.5rem 1.5rem;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.12);
+      padding: 0.25rem 0.6rem;
+      border-radius: 100px;
+      margin-bottom: 0.75rem;
+    }
+
+    .brand-pill::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .card-header .icon {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 0.65rem;
+      background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);
+      border: 1px solid rgba(37, 99, 235, 0.12);
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+    }
+
+    .card-header .icon svg {
+      width: 22px;
+      height: 22px;
+      color: var(--primary);
+    }
+
+    .card-header h1 {
+      font-size: 1.375rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      color: var(--slate-900);
+    }
+
+    .card-header p {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--slate-500);
+      margin-top: 0.25rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .date-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--slate-600);
+      background: var(--slate-100);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      padding: 0.35rem 0.75rem;
+      border-radius: 100px;
+      margin-bottom: 1rem;
+    }
+
+    .form-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: var(--slate-800);
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      font-size: 0.875rem;
+      font-family: var(--font);
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      background: var(--input-bg);
+      color: var(--slate-900);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    }
+
+    .form-group select {
+      cursor: pointer;
+      appearance: none;
+      background-color: var(--input-bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.875rem center;
+      padding-right: 2.75rem;
+      min-height: 40px;
+    }
+
+    .form-group select option {
+      background: var(--white);
+      color: var(--slate-900);
+    }
+
+    .form-group input:hover,
+    .form-group select:hover {
+      border-color: #cbd5e1;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 4px var(--primary-glow);
+      transform: translateY(-1px);
+    }
+
+    .form-group input.invalid,
+    .form-group select.invalid {
+      border-color: var(--error);
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-submit {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.7rem 1.25rem;
+      font-size: 0.875rem;
+      font-family: var(--font);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: var(--white);
+      background: linear-gradient(180deg, var(--primary-light) 0%, var(--primary) 100%);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 20px rgba(37, 99, 235, 0.35);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      min-height: 42px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      background: linear-gradient(180deg, #4f8ff7 0%, var(--primary-hover) 100%);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 12px 28px rgba(37, 99, 235, 0.45);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-top-color: var(--white);
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.75rem;
+      pointer-events: none;
+      max-width: 400px;
+    }
+
+    .toast {
+      width: 100%;
+      max-width: 380px;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-lg);
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.5;
+      font-family: var(--font);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+      animation: toastIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: auto;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .toast.success {
+      color: #047857;
+      border-left: 4px solid var(--success);
+    }
+
+    .toast.success .toast-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--success);
+      font-size: 0.75rem;
+    }
+
+    .toast.error {
+      color: #b91c1c;
+      border-left: 4px solid var(--error);
+    }
+
+    .toast.error .toast-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--error);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(24px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0.75rem; }
+      .card { padding: 1.25rem 1.25rem 1.35rem; }
+      .card-header h1 { font-size: 1.25rem; }
+      #toast-container { right: 1rem; left: 1rem; max-width: none; }
+      .toast { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-bg" aria-hidden="true"></div>
+  <div id="toast-container" aria-live="polite"></div>
+
+  <main class="card">
+    <div class="brand-pill">Enterprise Attendance</div>
+
+    <header class="card-header">
+      <div class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <path d="M9 12h6M9 16h6"/>
+        </svg>
+      </div>
+      <h1>Mark Attendance</h1>
+      <p>Student Attendance System</p>
+    </header>
+
+    <div class="date-badge" id="dateDisplay" aria-label="Today's date"></div>
+
+    <form id="attendanceForm" novalidate>
+      <div class="form-section">
+        <div class="form-group">
+          <label for="studentId">Student</label>
+          <select id="studentId" name="studentId" required>
+            <option value="">Loading students...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" name="status" required>
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">
+        <span id="btnText">Mark Attendance</span>
+      </button>
+    </form>
+  </main>
+
+  <script>
+    const form = document.getElementById('attendanceForm');
+    const studentIdInput = document.getElementById('studentId');
+    const statusSelect = document.getElementById('status');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const dateDisplay = document.getElementById('dateDisplay');
+    const toastContainer = document.getElementById('toast-container');
+
+    const today = new Date().toISOString().split('T')[0];
+
+    async function loadStudents() {
+      try {
+        const res = await fetch('/api/students');
+        const students = await res.json();
+        if (!res.ok) throw new Error(students.error || 'Server error');
+        if (!Array.isArray(students)) throw new Error('Invalid response');
+
+        studentIdInput.innerHTML = '<option value="">Select a student</option>';
+        students.forEach((s) => {
+          const opt = document.createElement('option');
+          opt.value = s.student_id;
+          opt.textContent = `${s.student_id} — ${s.name}${s.department ? ' (' + s.department + ')' : ''}`;
+          studentIdInput.appendChild(opt);
+        });
+
+        if (students.length === 0) {
+          showToast('No students in database. Add students to the Students table first.', 'error');
+        }
+      } catch {
+        studentIdInput.innerHTML = '<option value="">Failed to load students</option>';
+        showToast('Could not load student list. Restart the server and refresh.', 'error');
+      }
+    }
+
+    loadStudents();
+
+    dateDisplay.textContent = '📅 ' + new Date().toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.setAttribute('role', 'alert');
+      toast.innerHTML =
+        '<span class="toast-icon">' + (type === 'success' ? '✓' : '✕') + '</span>' +
+        '<span>' + message + '</span>';
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = '0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 4500);
+    }
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      if (loading) {
+        btnText.innerHTML = '<span class="spinner"></span> Saving...';
+      } else {
+        btnText.textContent = 'Mark Attendance';
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      studentIdInput.classList.remove('invalid');
+
+      const student_id = parseInt(studentIdInput.value, 10);
+      const status = statusSelect.value;
+      const date = today;
+
+      if (!studentIdInput.value || isNaN(student_id)) {
+        studentIdInput.classList.add('invalid');
+        showToast('Please select a student from the list.', 'error');
+        studentIdInput.focus();
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const response = await fetch('/mark-attendance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id, date, status })
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (response.ok) {
+          showToast(result.message || 'Attendance marked successfully!', 'success');
+          studentIdInput.selectedIndex = 0;
+        } else {
+          const msg = result.detail
+            ? `${result.error} (${result.detail})`
+            : (result.error || 'Failed to mark attendance. Please try again.');
+          showToast(msg, 'error');
+        }
+      } catch {
+        showToast('Network error. Check your connection and try again.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>
