@@ -2,10 +2,12 @@ const express = require('express');
 const path = require('path');
 const mysql = require('mysql2/promise');
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+const { fromInstanceMetadata } = require("@aws-sdk/credential-providers");
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ATTENDANCE_THRESHOLD = Number(process.env.ATTENDANCE_THRESHOLD) || 75;
 
 app.use(express.json());
 
@@ -19,13 +21,81 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-const snsClient = new SNSClient({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
+const snsClient = new SNSClient({ 
+  region: "us-east-1",
+  credentials: fromInstanceMetadata() // Ye command EC2 ke IAM role ko force karti hai
 });
+
+
+
+async function getStudentAttendancePercentage(studentId) {
+  const [rows] = await pool.query(
+    `SELECT
+       COUNT(*) AS total_days,
+       SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END) AS present_days
+     FROM Attendance
+     WHERE student_id = ?`,
+    [studentId]
+  );
+
+  const total = Number(rows[0].total_days);
+  const present = Number(rows[0].present_days);
+
+  if (total === 0) return { total: 0, present: 0, percentage: 100 };
+
+  const percentage = Math.round((present / total) * 100);
+  return { total, present, percentage };
+}
+
+async function publishLowAttendanceAlert({ studentId, studentName, percentage, present, total }) {
+  const topicArn = process.env.LOW_ATTENDANCE_SNS_TOPIC_ARN;
+  if (!topicArn) {
+    console.warn('LOW_ATTENDANCE_SNS_TOPIC_ARN is not set — skipping SNS alert');
+    return;
+  }
+
+  const message =
+    `Low Attendance Alert\n\n` +
+    `Student: ${studentName} (ID: ${studentId})\n` +
+    `Attendance: ${percentage}% (${present} present out of ${total} days)\n` +
+    `Threshold: below ${ATTENDANCE_THRESHOLD}%\n` +
+    `Action required: Please review this student's attendance.`;
+
+  const result = await snsClient.send(
+    new PublishCommand({
+      TopicArn: topicArn,
+      Subject: `Low Attendance Alert — ${studentName}`,
+      Message: message,
+    })
+  );
+
+  console.log('Low attendance SNS sent:', result.MessageId);
+  return result;
+}
+
+async function checkAndNotifyLowAttendance(studentId) {
+  try {
+    const [students] = await pool.query(
+      'SELECT name FROM Students WHERE student_id = ?',
+      [studentId]
+    );
+    const studentName = students[0]?.name || `Student ${studentId}`;
+
+    const { total, present, percentage } = await getStudentAttendancePercentage(studentId);
+
+    if (total > 0 && percentage < ATTENDANCE_THRESHOLD) {
+      await publishLowAttendanceAlert({
+        studentId,
+        studentName,
+        percentage,
+        present,
+        total,
+      });
+    }
+  } catch (snsErr) {
+    console.error('SNS low-attendance alert failed:', snsErr.message);
+  }
+}
 
 app.get('/api/students', async (req, res) => {
   try {
@@ -57,17 +127,8 @@ app.post('/mark-attendance', async (req, res) => {
       [studentId, date, status]
     );
 
-    try {
-      const snsData = await snsClient.send(
-        new PublishCommand({
-          Message: `Attendance marked successfully for Student ID: ${student_id} on ${date}`,
-          TopicArn: process.env.SNS_TOPIC_ARN,
-        })
-      );
-      console.log('Notification sent successfully:', snsData.MessageId);
-    } catch (snsErr) {
-      console.error('SNS Error:', snsErr);
-    }
+    // After saving attendance, check if % dropped below threshold and email via SNS
+    await checkAndNotifyLowAttendance(studentId);
 
     res.status(201).json({
       message: 'Attendance marked successfully',
